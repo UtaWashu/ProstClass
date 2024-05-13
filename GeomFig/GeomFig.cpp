@@ -1,47 +1,118 @@
 #include <iostream>
+#include <vector>
+#include <memory>
 #include <cmath>
+#include <stdexcept>
 
-using namespace std;
+class Shape {
+private:
 
-// Структура для хранения координат точки
-struct Point {
-	int x;
-	int y;
+    struct Point {
+        double X;
+        double Y;
+        Point(double X, double Y);
+        void display();
+    };
+
+    std::vector<Point> points;
+    unsigned count = 0;
+
+
+public:
+    Shape() {}
+    void addPoint(double x, double y);
+    void popPoint();
+    void deletePoint(int index);
+    void displayPoints();
+    unsigned getCount() const;
+    double getArea();
+    double getPerimeter();
 };
 
-// Функция для вычисления расстояния между двумя точками
-double distance(Point p1, Point p2) {
-	return sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
+Shape::Point::Point(double x, double y) {
+    X = x;
+    Y = y;
+}
+
+void Shape::Point::display() {
+    std::cout << this->X << " " << this->Y;
+}
+
+void Shape::addPoint(double x, double y) {
+    Point point(x, y);
+    points.emplace_back(point);
+    count++;
+}
+
+void Shape::popPoint() {
+    points.pop_back();
+    count--;
+}
+
+void Shape::deletePoint(int index) {
+    if (points.size() > index)
+        points.erase(points.begin() + index);
+}
+
+void Shape::displayPoints() {
+    for (Point& p : points) {
+        p.display();
+        std::cout << std::endl;
+    }
+}
+
+unsigned Shape::getCount() const { return count; }
+
+double Shape::getArea() {
+    if (count < 3) {
+        throw std::runtime_error("Нужно минимум 3 точки!");
+    }
+    double sum1 = 0;
+    double sum2 = 0;
+    for (int i = 0; i < count - 1; i++) {
+        sum1 += points[i].X * points[i + 1].Y;
+        sum2 += points[i].Y * points[i + 1].X;
+    }
+    sum1 += points[count - 1].X * points[0].Y;
+    sum2 += points[count - 1].Y * points[0].X;
+
+    return std::abs((sum1 - sum2) / 2);
+}
+
+double Shape::getPerimeter() {
+    if (count < 3) {
+        throw std::runtime_error("Нужно минимум 3 точки!");
+    }
+    double result = 0;
+
+    for (int i = 0; i < count; i++) {
+        result += sqrt(pow((points[i].X - points[(i + 1) % count].X), 2) + pow((points[i].Y - points[(i + 1) % count].Y), 2));
+    }
+    return result;
 }
 
 int main() {
-	setlocale(LC_ALL, "Rus");
-	// Ввод координат точек
-	Point A, B, C;
-	cout << "Введите координаты точки A (x y): ";
-	cin >> A.x >> A.y;
-	cout << "Введите координаты точки B (x y): ";
-	cin >> B.x >> B.y;
-	cout << "Введите координаты точки C (x y): ";
-	cin >> C.x >> C.y;
+    Shape someShape;
+    someShape.addPoint(1, 3);
+    someShape.addPoint(3, 5);
+    someShape.addPoint(45, 5);
 
-	// Вычисление сторон треугольника
-	double AB = distance(A, B);
-	double BC = distance(B, C);
-	double AC = distance(A, C);
+    std::cout << "Perimeter: " << someShape.getPerimeter() << std::endl;
+    std::cout << "Area: " << someShape.getArea() << std::endl;
 
-	// Вычисление периметра
-	double perimeter = AB + BC + AC;
+    std::vector<Shape> shapes;
+    std::vector<std::unique_ptr<Shape>> shapePtrs;
 
-	// Вычисление полупериметра
-	double semiperimeter = perimeter / 2;
+    shapePtrs.push_back(std::make_unique<Shape>(Shape()));
+    shapePtrs.push_back(std::make_unique<Shape>(Shape()));
+    shapePtrs.push_back(std::make_unique<Shape>(Shape()));
+    shapePtrs.push_back(std::make_unique<Shape>(Shape()));
 
-	// Вычисление площади треугольника по формуле Герона
-	double area = sqrt(semiperimeter * (semiperimeter - AB) * (semiperimeter - BC) * (semiperimeter - AC));
+    shapePtrs[1]->addPoint(2, 4);
+    shapePtrs[1]->addPoint(3, 8);
+    shapePtrs[1]->addPoint(4, 9);
 
-	// Вывод результатов
-	cout << "Периметр треугольника: " << perimeter << endl;
-	cout << "Площадь треугольника: " << area << endl;
+    std::cout << "Area from pointer: " << shapePtrs[1]->getArea() << std::endl;
 
-	return 0;
+    return 0;
 }
